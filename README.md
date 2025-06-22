@@ -9,7 +9,6 @@ You can install it directly from the GitHub repository.
 ### Using `uv` or `pip`
 
 ```bash
-# Replace <YOUR_GITHUB_PAT>, <USERNAME>, and <REPO_NAME> with your details.
 pip install git+https://github.com/ZeroGuacamole/mode-python-sdk.git
 ```
 
