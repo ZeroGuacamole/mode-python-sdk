@@ -4,21 +4,19 @@ A Python SDK for interacting with the Mode API.
 
 ## Installation
 
-This SDK is intended for use in a private repository and is not published on PyPI. You can install it directly from your private GitHub repository.
+You can install it directly from the GitHub repository.
 
 ### Using `uv` or `pip`
 
-You will need a GitHub Personal Access Token (PAT) with the `repo` scope to install from a private repository.
-
 ```bash
 # Replace <YOUR_GITHUB_PAT>, <USERNAME>, and <REPO_NAME> with your details.
-pip install git+https://<YOUR_GITHUB_PAT>@github.com/<USERNAME>/<REPO_NAME>.git
+pip install git+https://github.com/ZeroGuacamole/mode-python-sdk.git
 ```
 
 Or with `uv`:
 
 ```bash
-uv pip install git+https://<YOUR_GITHUB_PAT>@github.com/<USERNAME>/<REPO_NAME>.git
+uv pip install git+https://github.com/ZeroGuacamole/mode-python-sdk.git
 ```
 
 ## Quickstart
@@ -72,11 +70,20 @@ except ModeAPIError as e:
 
 ## Development
 
-To set up a development environment:
-
 1.  Clone the repository.
-2.  Create a virtual environment: `python -m venv .venv`
-3.  Activate it: `source .venv/bin/activate`
-4.  Install `uv`: `pip install uv`
-5.  Install dependencies: `uv pip install -e ".[dev]"`
-6.  Run tests: `pytest`
+2.  Create a virtual environment:
+    ```bash
+    uv venv
+    ```
+3.  Activate the virtual environment:
+    ```bash
+    source .venv/bin/activate
+    ```
+4.  Install dependencies:
+    ```bash
+    uv pip install -e ".[dev]"
+    ```
+5.  Run tests:
+    ```bash
+    pytest
+    ```
