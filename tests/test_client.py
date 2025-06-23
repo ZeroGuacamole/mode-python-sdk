@@ -1,6 +1,4 @@
 import pytest
-import requests
-import requests_mock
 
 from mode_sdk.client import ModeAPIClient
 from mode_sdk.exceptions import AuthenticationError, APIError
