@@ -8,12 +8,17 @@ version = "0.1.0"
 description = "A Python SDK for the Mode API."
 authors = [{ name = "Daniil Merkulov", email = "daniil.merkulov@gmail.com" }]
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-dependencies = ["requests>=2.20.0", "pydantic>=2.0"]
+dependencies = [
+    "requests==2.32.4",
+    "pydantic==2.11.7",
+    "python-dotenv",
+    "types-requests>=2.32.4",
+]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-mock", "requests-mock", "uv"]
+dev = ["pytest", "pytest-mock", "requests-mock", "black", "ruff", "mypy"]
