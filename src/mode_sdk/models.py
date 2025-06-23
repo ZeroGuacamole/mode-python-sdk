@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -10,28 +10,37 @@ class Quote(BaseModel):
     symbol: str
     price: float
     timestamp: datetime
+    bid: Optional[float] = None
+    ask: Optional[float] = None
+    volume: Optional[int] = None
+    change: Optional[float] = None
+    change_percent: Optional[float] = Field(default=None, alias="changePercent")
+    day_high: Optional[float] = Field(default=None, alias="dayHigh")
+    day_low: Optional[float] = Field(default=None, alias="dayLow")
+    previous_close: Optional[float] = Field(default=None, alias="previousClose")
+    open: Optional[float] = None
 
 
 class QuoteResponse(BaseModel):
     """Represents the structure of the quotes API response."""
 
-    quotes: List[Quote]
-    errors: dict
+    quotes: Dict[str, Quote]
+    errors: Dict[str, str]
 
 
-class OHLCV(BaseModel):
+class HistoricalDataPoint(BaseModel):
     """Represents a single OHLCV data point."""
 
-    timestamp: datetime = Field(..., alias="time")
-    open: float
-    high: float
-    low: float
-    close: float
-    volume: int
+    timestamp: datetime
+    open: Optional[float] = None
+    high: Optional[float] = None
+    low: Optional[float] = None
+    close: Optional[float] = None
+    volume: Optional[int] = None
 
 
 class HistoricalDataResponse(BaseModel):
     """Represents the structure of the historical data API response."""
 
     symbol: str
-    data_points: List[OHLCV] = Field(..., alias="dataPoints")
+    data_points: List[HistoricalDataPoint] = Field(..., alias="dataPoints")

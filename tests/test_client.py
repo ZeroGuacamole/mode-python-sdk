@@ -28,7 +28,7 @@ def test_successful_authentication(requests_mock):
 
 
 def test_failed_authentication_bad_credentials(requests_mock):
-    """Test that AuthenticationError is raised for 401 status."""
+    """Test that AuthenticationError is raised for a 401 Unauthorized status."""
     requests_mock.post(AUTH_URL, status_code=401)
     with pytest.raises(AuthenticationError, match="Invalid credentials"):
         ModeAPIClient(base_url=BASE_URL, email="wrong@example.com", password="wrong")
@@ -38,17 +38,52 @@ def test_get_quotes_success(api_client, requests_mock):
     """Test successful fetching of quotes."""
     quotes_url = f"{BASE_URL}/api/v1/market-data/quotes"
     mock_response = {
-        "quotes": [
-            {"symbol": "AAPL", "price": 150.0, "timestamp": "2023-01-01T12:00:00Z"}
-        ],
+        "quotes": {
+            "AAPL": {
+                "symbol": "AAPL",
+                "price": 150.0,
+                "timestamp": "2023-01-01T12:00:00Z",
+                "ask": 150.5,
+                "bid": 149.5,
+            }
+        },
         "errors": {},
     }
     requests_mock.get(quotes_url, json=mock_response, status_code=200)
 
-    response = api_client.get_quotes(["AAPL"])
-    assert response.quotes[0].symbol == "AAPL"
-    assert response.quotes[0].price == 150.0
+    response = api_client.market_data.get_quotes(["AAPL"])
+    assert response.quotes["AAPL"].symbol == "AAPL"
+    assert response.quotes["AAPL"].price == 150.0
+    assert response.quotes["AAPL"].ask == 150.5
     assert len(response.errors) == 0
+
+
+def test_get_quotes_partial_success(api_client, requests_mock):
+    """Test fetching quotes where some symbols are found and others return errors."""
+    quotes_url = f"{BASE_URL}/api/v1/market-data/quotes"
+    mock_response = {
+        "quotes": {
+            "AAPL": {
+                "symbol": "AAPL",
+                "price": 150.0,
+                "timestamp": "2023-01-01T12:00:00Z",
+            }
+        },
+        "errors": {"GOOG": "Symbol not found"},
+    }
+    requests_mock.get(quotes_url, json=mock_response, status_code=200)
+
+    response = api_client.market_data.get_quotes(["AAPL", "GOOG"])
+    assert response.quotes["AAPL"].symbol == "AAPL"
+    assert "GOOG" in response.errors
+    assert response.errors["GOOG"] == "Symbol not found"
+
+
+def test_get_quotes_empty_list(api_client):
+    """Test that calling get_quotes with an empty list returns an empty response."""
+    response = api_client.market_data.get_quotes([])
+    assert response.quotes == {}
+    assert response.errors == {}
 
 
 def test_get_historical_data_success(api_client, requests_mock):
@@ -59,7 +94,7 @@ def test_get_historical_data_success(api_client, requests_mock):
         "symbol": "TSLA",
         "dataPoints": [
             {
-                "time": "2023-01-01T00:00:00Z",
+                "timestamp": "2023-01-01T00:00:00Z",
                 "open": 200.0,
                 "high": 205.0,
                 "low": 199.0,
@@ -70,31 +105,62 @@ def test_get_historical_data_success(api_client, requests_mock):
     }
     requests_mock.get(historical_url, json=mock_response, status_code=200)
 
-    response = api_client.get_historical_data(
+    response = api_client.market_data.get_historical_data(
         symbol, "2023-01-01", "2023-01-02", "daily"
     )
     assert response.symbol == "TSLA"
     assert response.data_points[0].open == 200.0
+    assert response.data_points[0].timestamp.year == 2023
+
+
+def test_get_historical_data_with_optional_fields(api_client, requests_mock):
+    """Test that historical data with missing optional fields is handled correctly."""
+    symbol = "MSFT"
+    historical_url = f"{BASE_URL}/api/v1/market-data/historical/{symbol}"
+    mock_response = {
+        "symbol": "MSFT",
+        "dataPoints": [
+            {"timestamp": "2023-01-01T00:00:00Z", "close": 300.0, "volume": None}
+        ],
+    }
+    requests_mock.get(historical_url, json=mock_response, status_code=200)
+
+    response = api_client.market_data.get_historical_data(
+        symbol, "2023-01-01", "2023-01-02", "daily"
+    )
+    point = response.data_points[0]
+    assert point.close == 300.0
+    assert point.open is None
+    assert point.high is None
+    assert point.volume is None
 
 
 def test_api_error_on_500(api_client, requests_mock):
-    """Test that APIError is raised for a 500 server error."""
+    """Test that APIError is raised for a 500 Internal Server Error."""
     quotes_url = f"{BASE_URL}/api/v1/market-data/quotes"
     requests_mock.get(quotes_url, status_code=500, text="Internal Server Error")
 
     with pytest.raises(APIError) as excinfo:
-        api_client.get_quotes(["AAPL"])
+        api_client.market_data.get_quotes(["AAPL"])
 
     assert excinfo.value.status_code == 500
     assert "Internal Server Error" in excinfo.value.message
 
 
-def test_malformed_response_validation_error(api_client, requests_mock):
-    """Test that an APIError is raised if the response is malformed."""
+def test_malformed_response_triggers_api_error(api_client, requests_mock):
+    """Test that an APIError is raised if the API response is malformed."""
     quotes_url = f"{BASE_URL}/api/v1/market-data/quotes"
-    # 'price' is a string instead of a float
-    mock_response = {"quotes": [{"symbol": "AAPL", "price": "invalid-price"}]}
+    mock_response = {
+        "quotes": {
+            "AAPL": {
+                "symbol": "AAPL",
+                "price": "invalid-price",  # Price should be a float
+                "timestamp": "2023-01-01T12:00:00Z",
+            }
+        },
+        "errors": {},
+    }
     requests_mock.get(quotes_url, json=mock_response, status_code=200)
 
     with pytest.raises(APIError):
-        api_client.get_quotes(["AAPL"])
+        api_client.market_data.get_quotes(["AAPL"])

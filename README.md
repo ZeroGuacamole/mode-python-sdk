@@ -6,16 +6,10 @@ A Python SDK for interacting with the Mode API.
 
 You can install it directly from the GitHub repository.
 
-### Using `uv` or `pip`
+### Using `pip`
 
 ```bash
 pip install git+https://github.com/ZeroGuacamole/mode-python-sdk.git
-```
-
-Or with `uv`:
-
-```bash
-uv pip install git+https://github.com/ZeroGuacamole/mode-python-sdk.git
 ```
 
 ## Quickstart
@@ -49,7 +43,7 @@ try:
 
     # Fetch historical data for a symbol
     symbol = "AAPL"
-    historical_data = client.get_historical_data(
+    historical_data = client.market_data.get_historical_data(
         symbol=symbol,
         start_time="2023-01-01",
         end_time="2023-12-31",
@@ -58,7 +52,6 @@ try:
 
     print(f"Successfully fetched {len(historical_data.data_points)} data points for {symbol}.")
 
-    # The data is a Pydantic model, so you can access it with autocomplete
     for point in historical_data.data_points:
         print(f"Date: {point.timestamp.date()}, Close: {point.close}")
 
