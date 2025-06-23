@@ -4,6 +4,7 @@ import requests_mock
 
 from mode_sdk.client import ModeAPIClient
 from mode_sdk.exceptions import AuthenticationError, APIError
+from mode_sdk.models import StockDetails
 
 BASE_URL = "http://localhost:8080"
 AUTH_URL = f"{BASE_URL}/api/v1/auth/login"
@@ -84,6 +85,44 @@ def test_get_quotes_empty_list(api_client):
     response = api_client.market_data.get_quotes([])
     assert response.quotes == {}
     assert response.errors == {}
+
+
+def test_get_asset_success(api_client, requests_mock):
+    """Test successful fetching of asset reference data."""
+    symbol = "AAPL"
+    asset_url = f"{BASE_URL}/api/v1/assets/{symbol.upper()}"
+    mock_response = {
+        "symbol": "AAPL",
+        "assetType": "STOCK",
+        "name": "Apple Inc.",
+        "exchange": "NASDAQ",
+        "currency": "USD",
+        "status": "ACTIVE",
+        "lastUpdated": "2023-10-27T10:00:00Z",
+        "details": {"sector": "Technology", "industry": "Consumer Electronics"},
+    }
+    requests_mock.get(asset_url, json=mock_response, status_code=200)
+
+    asset = api_client.assets.get_asset(symbol)
+
+    assert asset.symbol == "AAPL"
+    assert asset.asset_type == "STOCK"
+    assert asset.name == "Apple Inc."
+    assert isinstance(asset.details, StockDetails)
+    assert asset.details.sector == "Technology"
+
+
+def test_get_asset_not_found(api_client, requests_mock):
+    """Test that APIError is raised for a 404 Not Found error."""
+    symbol = "FAKE"
+    asset_url = f"{BASE_URL}/api/v1/assets/{symbol.upper()}"
+    requests_mock.get(asset_url, status_code=404, text="Asset not found")
+
+    with pytest.raises(APIError) as excinfo:
+        api_client.assets.get_asset(symbol)
+
+    assert excinfo.value.status_code == 404
+    assert "Asset not found" in excinfo.value.message
 
 
 def test_get_historical_data_success(api_client, requests_mock):

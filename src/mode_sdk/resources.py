@@ -2,7 +2,46 @@ import requests
 from typing import List
 
 from .exceptions import APIError
-from .models import HistoricalDataResponse, QuoteResponse
+from .models import Asset, HistoricalDataResponse, QuoteResponse
+
+
+class AssetsResource:
+    """
+    Handles asset reference data endpoints.
+    """
+
+    def __init__(self, session: requests.Session, base_url: str):
+        self.session = session
+        self.base_url = base_url
+
+    def get_asset(self, symbol: str) -> Asset:
+        """
+        Fetches reference data for a single asset.
+
+        Args:
+            symbol: The ticker symbol (e.g., 'AAPL').
+
+        Returns:
+            An Asset object containing reference data.
+
+        Raises:
+            APIError: If the API returns an error or the response is malformed.
+        """
+        asset_url = f"{self.base_url}/api/v1/assets/{symbol.upper()}"
+
+        try:
+            response = self.session.get(asset_url)
+            response.raise_for_status()
+            return Asset.model_validate(response.json())
+        except requests.exceptions.HTTPError as e:
+            raise APIError(
+                status_code=e.response.status_code, message=e.response.text
+            ) from e
+        except Exception as e:
+            raise APIError(
+                status_code=500,
+                message=f"An error occurred while fetching asset data: {e}",
+            ) from e
 
 
 class MarketDataResource:

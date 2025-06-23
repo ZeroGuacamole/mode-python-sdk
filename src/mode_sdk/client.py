@@ -3,7 +3,7 @@ import requests
 from typing import Optional
 
 from .exceptions import APIError, AuthenticationError
-from .resources import MarketDataResource
+from .resources import AssetsResource, MarketDataResource
 
 
 class ModeAPIClient:
@@ -49,6 +49,7 @@ class ModeAPIClient:
 
         # Initialize resource groups
         self.market_data = MarketDataResource(self.session, self.base_url)
+        self.assets = AssetsResource(self.session, self.base_url)
 
     def _authenticate(self) -> None:
         """
