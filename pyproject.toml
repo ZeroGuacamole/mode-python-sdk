@@ -14,7 +14,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "requests==2.32.4",
+    "requests==2.32.5",
     "pydantic==2.11.7",
     "python-dotenv",
     "types-requests>=2.32.4",
@@ -22,6 +22,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest", "pytest-mock", "requests-mock", "black", "ruff", "mypy"]
+backtest = ["pandas>=2.3.2", "numpy>=2.3.2"]
 
 [tool.ruff]
 line-length = 120
