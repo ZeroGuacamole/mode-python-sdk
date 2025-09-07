@@ -8,6 +8,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        extras: ["dev", "dev,backtest"]
 
     steps:
       - name: Checkout repository
@@ -19,8 +22,8 @@ jobs:
           activate-environment: true
           python-version: "3.13"
 
-      - name: Install dependencies
-        run: uv pip install -e ".[dev]"
+      - name: Install dependencies with extras
+        run: uv pip install -e ".[${{ matrix.extras }}]"
 
       - name: Run tests with pytest
         run: uv run pytest

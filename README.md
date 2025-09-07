@@ -12,6 +12,12 @@ You can install it directly from the GitHub repository.
 pip install git+https://github.com/ZeroGuacamole/mode-python-sdk.git
 ```
 
+Install with backtesting helpers (pandas/numpy) via extras:
+
+```bash
+pip install "git+https://github.com/ZeroGuacamole/mode-python-sdk.git#egg=mode-sdk[backtest]"
+```
+
 ## Quickstart
 
 Here's a quick example of how to use the client to fetch historical data.
@@ -59,6 +65,45 @@ except ModeAPIError as e:
     print(f"An API error occurred: {e}")
 
 ```
+
+### Helpers
+
+The models include utilities commonly used in research/backtesting pipelines.
+
+1. Convert historical data to a pandas DataFrame (UTC index):
+
+```python
+from mode_sdk.client import ModeAPIClient
+
+client = ModeAPIClient()
+hist = client.market_data.get_historical_data("AAPL", "2024-01-01", "2024-01-31", "daily")
+
+# Requires: pip install pandas
+df = hist.to_dataframe()
+print(df.head())
+```
+
+2. Convert historical data to NumPy arrays for vectorized processing:
+
+```python
+# Requires: pip install numpy
+ts, open_, high, low, close, volume = hist.to_numpy()
+```
+
+3. Quote convenience properties:
+
+```python
+quotes = client.market_data.get_quotes(["AAPL"]).quotes
+q = quotes["AAPL"]
+print(q.mid_price, q.spread)
+```
+
+### Data validation and normalization
+
+- Symbols are normalized to uppercase in `Asset` and `HistoricalDataResponse`.
+- Timestamps are normalized to UTC in all models that include time fields.
+- OHLCV values are validated (non-negative; high/low consistency) for `HistoricalDataPoint`.
+- `Quote` validation ensures non-negative prices and `ask >= bid` when both are present.
 
 ## Development
 
